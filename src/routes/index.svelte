@@ -19,7 +19,7 @@ import { onMount } from "svelte";
 		"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false"
 	);
 	const data = await resp.json();
-	console.log(data);
+	// console.log(data);
 	coins = data;
 	filteredCoins = data;
 	};
