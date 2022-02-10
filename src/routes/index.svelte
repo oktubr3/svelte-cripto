@@ -1,59 +1,93 @@
-<script context="module">
-	export const prerender = true;
-</script>
-
+<!-- https://www.youtube.com/watch?v=uGhiM19d950 -->
 <script>
-	import Counter from '$lib/Counter.svelte';
+import { onMount } from "svelte";
+
+
+	let coins = [];
+	let filteredCoins = [];
+	let titles = [
+		'#',
+		'Coin',
+		'Price',
+		'Price Change',
+		'24h Volume'
+	];
+	let ref = null;
+
+	const loadCoins = async () => {
+	const resp = await fetch(
+		"https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false"
+	);
+	const data = await resp.json();
+	console.log(data);
+	coins = data;
+	filteredCoins = data;
+	};
+
+	loadCoins();
+
+	const searchCoin = (value) => {
+		filteredCoins = coins.filter(coin => 
+			coin.name.toLowerCase().includes(value.toLowerCase()) || 
+			coin.symbol.toLowerCase().includes(value.toLowerCase())
+			)
+	}
+
+	onMount(() => {
+		ref.focus();
+	})
 </script>
 
-<svelte:head>
-	<title>Home</title>
-</svelte:head>
-
-<section>
-	<h1>
-		<div class="welcome">
-			<picture>
-				<source srcset="svelte-welcome.webp" type="image/webp" />
-				<img src="svelte-welcome.png" alt="Welcome" />
-			</picture>
-		</div>
-
-		to your new<br />SvelteKit app
-	</h1>
-
-	<h2>
-		try editing <strong>src/routes/index.svelte</strong>
-	</h2>
-
-	<Counter />
-</section>
+<div class="container">
+  <div class="row">
+    <h1>CoinMarket</h1>
+	<input 
+		type="text" 
+		class="form-control bg-dark text-white rounded-0 border-0 my-4" 
+		placeholder="Search your Coin" 
+		on:keyup={({target: {value}}) => searchCoin(value)}
+		bind:this={ref}>
+    <table class="table table-dark">
+      <thead>
+        <tr>
+          {#each titles as title}
+			<th>
+				{title}
+			</th>
+		  {/each}
+        </tr>
+      </thead>
+      <tbody>
+        {#each filteredCoins as coin, i}
+          <tr>
+			<td class="text-muted">
+              {i + 1}
+            </td>
+            <td>
+				<img src={coin.image} alt={coin.name} style="width: 2rem;" class="image-fluid me-2">
+				<span>
+					 {coin.name}
+				</span>
+				<span class="text-muted text-uppercase ms-2">
+					{coin.symbol}
+				</span>
+            </td>
+			<td>
+				$ {coin.current_price.toLocaleString()}
+			</td>
+			<td class={coin.price_change_percentage_24h > 0 ? "text-success" : "text-danger"}>
+				{coin.price_change_percentage_24h} %
+			</td>
+			<td>
+				$ {coin.total_volume.toLocaleString()}
+			</td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
+</div>
 
 <style>
-	section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		flex: 1;
-	}
 
-	h1 {
-		width: 100%;
-	}
-
-	.welcome {
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
-	}
-
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
-	}
 </style>
